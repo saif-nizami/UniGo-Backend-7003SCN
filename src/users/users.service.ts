@@ -1,34 +1,29 @@
-// users/users.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { User } from './users.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+
+interface ApiResponse<T> {
+  status: boolean;
+  data: T;
+}
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepo: Repository<User>,
+    private userRepository: Repository<User>,
   ) {}
 
-  create(data: Partial<User>) {
-    const user = this.usersRepo.create(data);
-    return this.usersRepo.save(user);
+  async createUser(createUserDto: CreateUserDto): Promise<ApiResponse<User>> {
+    try {
+      const user = this.userRepository.create(createUserDto);
+      let savedUser = await this.userRepository.save(user);
+      return { status: true, data: savedUser } 
+    } catch (error) {
+        throw new BadRequestException(error.message || 'Failed to create user!');
+    }
   }
 
-  findAll() {
-    return this.usersRepo.find();
-  }
-
-  findOne(id: number) {
-    return this.usersRepo.findOneBy({ id });
-  }
-
-  update(id: number, data: Partial<User>) {
-    return this.usersRepo.update(id, data);
-  }
-
-  remove(id: number) {
-    return this.usersRepo.delete(id);
-  }
 }
