@@ -1,5 +1,6 @@
 // users/user.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'users' }) // explicitly match table name
 export class User {
@@ -13,6 +14,7 @@ export class User {
   email: string;
 
   @Column({ type: 'varchar', length: 255 })
+  @Exclude()
   password: string;
 
   @Column({ type: 'varchar', length: 20, unique: true, nullable: true })

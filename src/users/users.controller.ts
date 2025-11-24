@@ -1,14 +1,16 @@
 // src/users/users.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './users.entity';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 interface ApiResponse<T> {
   status: boolean;
   data: T | null;
 }
 
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
@@ -30,7 +32,7 @@ export class UsersController {
   // READ ONE
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ApiResponse<User>> {
-    const user = await this.userService.findOne(+id);
+    const user = await this.userService.findOneById(+id);
     return { status: true, data: user };
   }
 
