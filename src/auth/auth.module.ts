@@ -5,11 +5,13 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
+import { SesModule } from 'src/ses/ses.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    SesModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'supersecret',
       signOptions: { expiresIn: '1h' },

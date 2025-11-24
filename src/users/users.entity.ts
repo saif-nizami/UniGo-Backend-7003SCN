@@ -46,4 +46,10 @@ export class User {
 
   @Column({ type: 'int', nullable: true })
   modified_by: number;
+
+  @Column({ type: 'int', nullable: true })
+  email_verify: string;
+
+  @Column({ type: 'int', nullable: true })
+  mobile_verify: string;
 }

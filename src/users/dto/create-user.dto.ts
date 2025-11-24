@@ -8,5 +8,10 @@ export class CreateUserDto {
   verify_status?: number;
   referrer_code?: string;
   type?: number;
+  created_at?: Date;
   created_by?: number;
+  modified_at?: Date;
+  modified_by?: number;
+  email_verify?: string;
+  mobile_verify?: string;
 }

@@ -29,4 +29,11 @@ export class AuthController {
     const { password, ...user } = req.user;
     return { user };
   }
+
+  // PASSWORD RESET
+  @Post('reset')
+  async reset(@Body() dto: CreateUserDto): Promise<{ user: User }> {
+    const data = await this.authService.reset(dto.email);
+    return data
+  }
 }
