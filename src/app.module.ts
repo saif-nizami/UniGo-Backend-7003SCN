@@ -15,13 +15,13 @@ import { User } from './users/user.entity';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST,     // EC2 public IP
-      port: 5432,
-      username: process.env.DB_USER, // appuser
+      host: process.env.DB_HOST,
+      port: +(process.env.DB_PORT ?? 5432),
+      username: process.env.DB_USER,
       password: process.env.DB_PASS,
-      database: process.env.DB_NAME, // myappdb
+      database: process.env.DB_NAME,
       entities: [User],
-      synchronize: true,             // auto-create tables (dev only!)
+      synchronize: true,
     }),
     UsersModule,
   ],
