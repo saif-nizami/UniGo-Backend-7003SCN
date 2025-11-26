@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
-import { SesModule } from 'src/ses/ses.module';
+import { SesModule } from '../ses/ses.module';
 
 @Module({
   imports: [
