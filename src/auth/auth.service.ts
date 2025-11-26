@@ -32,11 +32,12 @@ export class AuthService {
     return { accessToken: this.jwtService.sign(payload) };
   }
 
-  async reset(email: string): Promise<any> {
+  async reset_by_email(email: string): Promise<any> {
     const { ...user } = await this.usersService.findOneByEmail(email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException('User not found!');
 
     const newOTP = generateOtp(user.email_verify || "000000");
+    await this.usersService.updateUser(user.id, {email_verify: newOTP})
     let sesRes = await this.sesService.sendEmail(
       user.email,
       'OTP to reset your UniGo account password!',
@@ -48,4 +49,43 @@ export class AuthService {
     }
     throw new BadRequestException('Unable to send OTP! Please try again later.');
   }
+
+  async reset_by_phone(phone_number: string): Promise<any> {
+    const { ...user } = await this.usersService.findOneByPhone(phone_number);
+    if (!user) throw new UnauthorizedException('User not found!');
+
+    const newOTP = generateOtp(user.email_verify || "000000");
+    await this.usersService.updateUser(user.id, {mobile_verify: newOTP})
+    let sesRes = await this.sesService.sendEmail(
+      user.email,
+      'OTP to reset your UniGo account password!',
+      `Hello ${user.name},\n\n${newOTP} is your OTP to reset your password!`,
+    );
+    // console.log('sesRes ::: ', sesRes)
+    if (sesRes && sesRes['$metadata'] && sesRes['$metadata']['httpStatusCode'] && sesRes['$metadata']['httpStatusCode'] == 200) {
+      return user
+    }
+    throw new BadRequestException('Unable to send OTP! Please try again later.');
+  }
+
+  async verifyOtpByEmail(email: string, otp: string) {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) throw new UnauthorizedException('User not found');
+    if (user.email_verify.toString() !== otp) {
+      throw new UnauthorizedException('Invalid OTP!');
+    }
+    await this.usersService.updateUser(user.id, { email_verify: "0", verify_status: 1 });
+    return user;
+  }
+
+  async verifyOtpByPhone(phone: string, otp: string) {
+    const user = await this.usersService.findOneByPhone(phone);
+    if (!user) throw new UnauthorizedException('User not found');
+    if (user.mobile_verify.toString() !== otp) {
+      throw new UnauthorizedException('Invalid OTP');
+    }
+    await this.usersService.updateUser(user.id, { mobile_verify: "0", verify_status: 1 });
+    return user;
+  }
+
 }

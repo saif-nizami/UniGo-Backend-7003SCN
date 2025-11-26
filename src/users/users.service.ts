@@ -42,6 +42,13 @@ export class UsersService {
     return user
   }
 
+  // READ ONE BY PHONE
+  async findOneByPhone(phone_number: string): Promise<User | null> {
+    const user = await this.userRepository.findOneBy({ phone_number });
+    // if (!user) throw new NotFoundException('User not found');
+    return user
+  }
+
   // UPDATE
   async updateUser(id: number, updateData: Partial<User>): Promise<User | null> {
     await this.userRepository.update(id, updateData);
