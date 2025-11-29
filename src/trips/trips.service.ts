@@ -16,24 +16,41 @@ export class TripsService {
   }
 
   async searchTrips(
-    origin: string,
-    destination: string,
-    date: string,
-    sort: string,
+    user_id: string,
+    origin?: string,
+    destination?: string,
+    date?: string,
+    sort?: string,
   ) {
     const query = this.tripRepo
       .createQueryBuilder('trip')
-      .where('trip.departure_location ILIKE :origin', { origin: `%${origin}%` })
-      .andWhere('trip.arrival_location ILIKE :destination', {
+      .where('trip.user_id = :user_id', { user_id });
+
+    // Optional origin
+    if (origin) {
+      query.andWhere('trip.departure_location ILIKE :origin', {
+        origin: `%${origin}%`,
+      });
+    }
+
+    // Optional destination
+    if (destination) {
+      query.andWhere('trip.arrival_location ILIKE :destination', {
         destination: `%${destination}%`,
       });
+    }
 
+    // Optional date
     if (date) {
       query.andWhere('DATE(trip.departure_time) = :date', { date });
     }
 
-    if (sort === 'price') query.orderBy('trip.price', 'ASC');
-    if (sort === 'time') query.orderBy('trip.departure_time', 'ASC');
+    // Optional sorting
+    if (sort === 'price') {
+      query.orderBy('trip.price', 'ASC');
+    } else if (sort === 'time') {
+      query.orderBy('trip.departure_time', 'ASC');
+    }
 
     return query.getMany();
   }

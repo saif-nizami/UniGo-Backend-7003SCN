@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { SesModule } from './ses/ses.module';
 import { S3Module } from './s3/s3.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
+import { TripsModule } from './trips/trips.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     AuthModule,
     SesModule,
     S3Module,
-    VehiclesModule
+    VehiclesModule,
+    TripsModule
   ],
   controllers: [AppController],
   providers: [AppService],

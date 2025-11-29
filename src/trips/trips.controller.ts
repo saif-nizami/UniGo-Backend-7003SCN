@@ -1,12 +1,14 @@
-import { Controller, Get, Query, Param, Post, Body } from '@nestjs/common';
+import { Controller, Get, Query, Param, Post, Body, UseGuards } from '@nestjs/common';
 import { TripsService } from './trips.service';
 import { CreateTripsDto } from './dto/create-trips.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@Controller('api')
+@UseGuards(JwtAuthGuard)
+@Controller('trips')
 export class TripsController {
   constructor(private readonly tripsService: TripsService) {}
 
-  @Get('users/me/trips')
+  @Get('mytrips')
   getMyTrips(
     @Query('userId') userId: number,
     @Query('role') role: string,
@@ -15,22 +17,23 @@ export class TripsController {
     return this.tripsService.getUserTrips(userId, role, status);
   }
 
-  @Get('trips/search')
+  @Get('search')
   searchTrips(
+    @Query('user_id') user_id: string,
     @Query('origin') origin: string,
     @Query('destination') destination: string,
     @Query('date') date: string,
     @Query('sort') sort: string,
   ) {
-    return this.tripsService.searchTrips(origin, destination, date, sort);
+    return this.tripsService.searchTrips(user_id, origin, destination, date, sort);
   }
 
-  @Get('trips/:tripId')
-  getTripDetail(@Param('tripId') tripId: number) {
-    return this.tripsService.getTripById(tripId);
+  @Get(':id')
+  getTripDetail(@Param('id') id: number) {
+    return this.tripsService.getTripById(id);
   }
 
-  @Post('trips')
+  @Post('create-trip')
   createTrip(@Body() body: CreateTripsDto) {
     return this.tripsService.createTrip(body);
   }
