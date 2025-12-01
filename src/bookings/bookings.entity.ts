@@ -1,0 +1,34 @@
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+
+@Entity('bookings')
+export class Booking {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  trip_id: number;
+
+  @Column()
+  user_id: number;
+
+  @Column()
+  seat: number;
+
+  @Column('decimal', { precision: 10, scale: 2 })
+  price: number;
+
+  @Column({ default: 0 })
+  status: number; // 0 = active/confirmed, 1 = cancelled, 2 = completed
+
+  @Column({ type: 'timestamp', default: () => 'NOW()' })
+  created_at: Date;
+
+  @Column({ default: 0 })
+  created_by: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  modified_at: Date | null;
+
+  @Column({ default: 0 })
+  modified_by: number;
+}
