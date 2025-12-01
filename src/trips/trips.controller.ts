@@ -25,7 +25,13 @@ export class TripsController {
     @Query('date') date: string,
     @Query('sort') sort: string,
   ) {
-    return this.tripsService.searchTrips(user_id, origin, destination, date, sort);
+    return this.tripsService.searchTrips(
+      user_id,
+      origin,
+      destination,
+      date,
+      sort,
+    );
   }
 
   @Get(':id')
@@ -36,5 +42,10 @@ export class TripsController {
   @Post('create-trip')
   createTrip(@Body() body: CreateTripsDto) {
     return this.tripsService.createTrip(body);
+  }
+
+  @Post('cancel')
+  cancelTrip(@Body() body: { id: string }) {
+    return this.tripsService.cancelTrip(body.id);
   }
 }

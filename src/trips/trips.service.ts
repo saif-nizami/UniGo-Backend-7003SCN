@@ -63,4 +63,8 @@ export class TripsService {
     const trip = this.tripRepo.create(dto);
     return this.tripRepo.save(trip);
   }
+
+  async cancelTrip(id: string) {
+    this.tripRepo.update(id, { status: 0 });
+  }
 }
