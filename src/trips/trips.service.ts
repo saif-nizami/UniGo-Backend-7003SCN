@@ -75,4 +75,8 @@ export class TripsService {
   async cancelTrip(id: string) {
     this.tripRepo.update(id, { status: 0 });
   }
+
+  async initTrip(id: string) {
+    this.tripRepo.update(id, { status: 1 });
+  }
 }

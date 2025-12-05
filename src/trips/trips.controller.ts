@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Param, Post, Put, Body, UseGuards } from '@nestjs/common';
 import { TripsService } from './trips.service';
 import { CreateTripsDto } from './dto/create-trips.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -47,5 +47,10 @@ export class TripsController {
   @Post('cancel')
   cancelTrip(@Body() body: { id: string }) {
     return this.tripsService.cancelTrip(body.id);
+  }
+
+  @Put('init')
+  initTrip(@Body() body: { id: string }) {
+    return this.tripsService.initTrip(body.id);
   }
 }
