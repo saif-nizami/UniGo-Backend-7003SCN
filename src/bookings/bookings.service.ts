@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Booking } from './bookings.entity';
 import { Trips } from '../trips/trips.entity';
+import { User } from '../users/users.entity';
 import { CreateBookingDto } from './dto/create-bookings.dto';
 import { BookingRating } from './bookings-rating.entity';
 
@@ -19,6 +20,8 @@ export class BookingsService {
     private readonly tripRepo: Repository<Trips>,
     @InjectRepository(BookingRating)
     private readonly ratingRepo: Repository<BookingRating>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -58,6 +61,23 @@ export class BookingsService {
     const booking = await this.bookingRepo.findOne({ where: { id } });
     if (!booking) throw new NotFoundException('Booking not found');
     return booking;
+  }
+
+  async getBookingByTripID(trip_id: number) {
+    const booking = await this.bookingRepo.findBy({ trip_id });
+    if (!booking) throw new NotFoundException('Booking not found');
+    console.log("bd ::: ", booking)
+    let returnData: { booking_data: Booking, user_data: any }[] = []
+    for (let i = 0; i < booking.length; i++) {
+      let booking_data = booking[i]
+      let user_data = {}
+      if (booking[i].user_id && +booking[i].user_id > 0) {
+        const user = await this.userRepo.findOneBy({ id: booking[i].user_id });
+        if (user) user_data = user
+      }
+      returnData.push({booking_data: booking[i], user_data: user_data})
+    }
+    return returnData
   }
 
   async cancelBooking(id: number, userId?: number) {

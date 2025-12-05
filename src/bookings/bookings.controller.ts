@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Param,
+  Query,
   Body,
   ParseIntPipe,
   BadRequestException,
@@ -31,10 +32,12 @@ export class BookingsController {
     return this.bookingsService.createBooking(tripId, body);
   }
 
-  // GET /api/bookings/:bookingId
-  @Get(':bookingId')
-  async getBooking(@Param('bookingId', ParseIntPipe) bookingId: number) {
-    return this.bookingsService.getBookingById(bookingId);
+  // GET /api/bookings
+  @Get()
+  async getBooking(
+    @Query('trip_id') trip_id: number,
+  ) {
+    return this.bookingsService.getBookingByTripID(trip_id);
   }
 
   // POST /api/bookings/:bookingId/cancel
