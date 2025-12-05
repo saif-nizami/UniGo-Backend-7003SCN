@@ -116,10 +116,10 @@ export class BookingsService {
       trip: trip
         ? {
             id: trip.id,
-            departure_location: trip.departure_location,
-            arrival_location: trip.arrival_location,
-            departure_time: trip.departure_time,
-            arrival_time: trip.arrival_time,
+            departure_location: trip.dep_lat + '|' + trip.dep_lng,
+            arrival_location: trip.arr_lat + '|' + trip.arr_lng,
+            departure_time: trip.dep_time,
+            arrival_time: trip.arr_time,
             vehicle_id: trip.vehicle_id,
           }
         : null,
