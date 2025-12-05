@@ -40,6 +40,8 @@ export class BookingsService {
         price,
         status: 0,
         created_by: dto.user_id,
+        pickup_lat_lng: dto.pickup_lat_lng,
+        pickup_point: dto.pickup_point
       });
       const saved = await manager.save(booking);
       // decrement availability

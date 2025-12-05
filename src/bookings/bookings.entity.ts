@@ -31,4 +31,10 @@ export class Booking {
 
   @Column({ default: 0 })
   modified_by: number;
+
+  @Column({ type: 'json', nullable: true })
+  pickup_point: any;
+
+  @Column({ type: 'varchar', nullable: true })
+  pickup_lat_lng: string; 
 }

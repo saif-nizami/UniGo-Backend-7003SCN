@@ -10,4 +10,10 @@ export class CreateBookingDto {
   @IsOptional()
   @IsNumber()
   price?: number;
+
+  @IsOptional()
+  pickup_point: JSON
+
+  @IsOptional()
+  pickup_lat_lng: string
 }
