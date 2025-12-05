@@ -10,6 +10,7 @@ import { S3Module } from './s3/s3.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { TripsModule } from './trips/trips.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { MiscModule } from './misc/misc.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { BookingsModule } from './bookings/bookings.module';
     S3Module,
     VehiclesModule,
     TripsModule,
-    BookingsModule
+    BookingsModule,
+    MiscModule
   ],
   controllers: [AppController],
   providers: [AppService],
