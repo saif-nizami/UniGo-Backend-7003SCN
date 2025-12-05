@@ -20,17 +20,17 @@ export class TripsController {
   @Get('search')
   searchTrips(
     @Query('user_id') user_id: string,
-    @Query('origin') origin: string,
-    @Query('destination') destination: string,
-    @Query('date') date: string,
-    @Query('sort') sort: string,
+    @Query('type') type: string,
+    @Query('lat') lat: string,
+    @Query('lng') lng: string,
+    @Query('radius') radius: string,
   ) {
     return this.tripsService.searchTrips(
       user_id,
-      origin,
-      destination,
-      date,
-      sort,
+      type,
+      lat,
+      lng,
+      radius,
     );
   }
 

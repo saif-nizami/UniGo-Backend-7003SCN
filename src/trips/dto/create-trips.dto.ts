@@ -1,36 +1,37 @@
-import { IsNotEmpty, IsNumber, IsString, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsDateString, IsOptional } from 'class-validator';
 
 
 export class CreateTripsDto {
 @IsNumber()
 user_id: number;
 
-
 @IsNumber()
 vehicle_id: number;
 
+@IsString()
+@IsOptional()
+dep_lat: string;
 
 @IsString()
-@IsNotEmpty()
-departure_location: string;
-
+@IsOptional()
+dep_lng: string;
 
 @IsString()
-@IsNotEmpty()
-arrival_location: string;
+@IsOptional()
+arr_lat: string;
 
+@IsString()
+@IsOptional()
+arr_lng: string;
 
 @IsDateString()
-departure_time: string;
-
+dep_time: string;
 
 @IsDateString()
-arrival_time: string;
-
+arr_time: string;
 
 @IsNumber()
 availability: number;
-
 
 @IsNumber()
 price: number;

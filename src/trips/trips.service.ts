@@ -17,41 +17,49 @@ export class TripsService {
 
   async searchTrips(
     user_id: string,
-    origin?: string,
-    destination?: string,
-    date?: string,
-    sort?: string,
+    type: string,
+    lat: string,
+    lng: string,
+    radius: string,
   ) {
-    const query = this.tripRepo
-      .createQueryBuilder('trip')
-      .where('trip.user_id = :user_id', { user_id });
-
-    // Optional origin
-    if (origin) {
-      query.andWhere('trip.departure_location ILIKE :origin', {
-        origin: `%${origin}%`,
-      });
+    const userIdNum = Number(user_id);
+    const latNum = Number(lat);
+    const lngNum = Number(lng);
+    const radiusNum = Number(radius);
+    const query = this.tripRepo.createQueryBuilder('trip');
+    if (userIdNum) {
+      query.andWhere('trip.user_id = :userId', { userId: userIdNum });
     }
-
-    // Optional destination
-    if (destination) {
-      query.andWhere('trip.arrival_location ILIKE :destination', {
-        destination: `%${destination}%`,
-      });
+    let columnLat = '';
+    let columnLng = '';
+    if (type === 'dep') {
+      columnLat = 'trip.dep_lat';
+      columnLng = 'trip.dep_lng';
+    } else if (type === 'arr') {
+      columnLat = 'trip.arr_lat';
+      columnLng = 'trip.arr_lng';
+    } else {
+      throw new Error("Invalid type — must be 'dep' or 'arr'");
     }
-
-    // Optional date
-    if (date) {
-      query.andWhere('DATE(trip.departure_time) = :date', { date });
-    }
-
-    // Optional sorting
-    if (sort === 'price') {
-      query.orderBy('trip.price', 'ASC');
-    } else if (sort === 'time') {
-      query.orderBy('trip.departure_time', 'ASC');
-    }
-
+    // Custom Haversine Logic
+    query.andWhere(
+      `
+    (
+      6371 * ACOS(
+        COS(RADIANS(:lat)) *
+        COS(RADIANS(${columnLat}::double precision)) *
+        COS(RADIANS(${columnLng}::double precision) - RADIANS(:lng)) +
+        SIN(RADIANS(:lat)) *
+        SIN(RADIANS(${columnLat}::double precision))
+      )
+    ) <= :radius
+  `,
+      {
+        lat: latNum,
+        lng: lngNum,
+        radius: radiusNum,
+      },
+    );
     return query.getMany();
   }
 

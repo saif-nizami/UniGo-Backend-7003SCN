@@ -16,19 +16,23 @@ vehicle_id: number;
 
 
 @Column({ length: 255 })
-departure_location: string;
-
+dep_lat: string;
 
 @Column({ length: 255 })
-arrival_location: string;
+dep_lng: string;
+
+@Column({ length: 255 })
+arr_lat: string;
+
+@Column({ length: 255 })
+arr_lng: string;
+
+@Column({ type: 'timestamp' })
+dep_time: Date;
 
 
 @Column({ type: 'timestamp' })
-departure_time: Date;
-
-
-@Column({ type: 'timestamp' })
-arrival_time: Date;
+arr_time: Date;
 
 
 @Column({ default: 0 })
