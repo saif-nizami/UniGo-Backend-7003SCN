@@ -66,7 +66,6 @@ export class BookingsService {
   async getBookingByTripID(trip_id: number) {
     const booking = await this.bookingRepo.findBy({ trip_id });
     if (!booking) throw new NotFoundException('Booking not found');
-    console.log("bd ::: ", booking)
     let returnData: { booking_data: Booking, user_data: any }[] = []
     for (let i = 0; i < booking.length; i++) {
       let booking_data = booking[i]
