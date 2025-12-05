@@ -35,4 +35,12 @@ availability: number;
 
 @IsNumber()
 price: number;
+
+@IsString()
+@IsOptional()
+dep_point: JSON;
+
+@IsString()
+@IsOptional()
+arr_point: JSON;
 }
