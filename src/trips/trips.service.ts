@@ -26,40 +26,52 @@ export class TripsService {
     const latNum = Number(lat);
     const lngNum = Number(lng);
     const radiusNum = Number(radius);
+
     const query = this.tripRepo.createQueryBuilder('trip');
+
+    // Filter by user
     if (userIdNum) {
       query.andWhere('trip.user_id = :userId', { userId: userIdNum });
     }
-    let columnLat = '';
-    let columnLng = '';
-    if (type === 'dep') {
-      columnLat = 'trip.dep_lat';
-      columnLng = 'trip.dep_lng';
-    } else if (type === 'arr') {
-      columnLat = 'trip.arr_lat';
-      columnLng = 'trip.arr_lng';
-    } else {
-      throw new Error("Invalid type — must be 'dep' or 'arr'");
+
+    // Determine which column to use for distance filtering
+    let columnLat: string | null = null;
+    let columnLng: string | null = null;
+
+    if (type) {
+      if (type === 'dep') {
+        columnLat = 'trip.dep_lat';
+        columnLng = 'trip.dep_lng';
+      } else if (type === 'arr') {
+        columnLat = 'trip.arr_lat';
+        columnLng = 'trip.arr_lng';
+      } else {
+        throw new Error("Invalid type — must be 'dep' or 'arr'");
+      }
     }
-    // Custom Haversine Logic
-    query.andWhere(
-      `
-    (
-      6371 * ACOS(
-        COS(RADIANS(:lat)) *
-        COS(RADIANS(${columnLat}::double precision)) *
-        COS(RADIANS(${columnLng}::double precision) - RADIANS(:lng)) +
-        SIN(RADIANS(:lat)) *
-        SIN(RADIANS(${columnLat}::double precision))
-      )
-    ) <= :radius
-  `,
-      {
-        lat: latNum,
-        lng: lngNum,
-        radius: radiusNum,
-      },
-    );
+
+    // Distance filter ONLY if type is provided
+    if (columnLat && columnLng) {
+      query.andWhere(
+        `
+        (
+          6371 * ACOS(
+            COS(RADIANS(:lat)) *
+            COS(RADIANS(${columnLat}::double precision)) *
+            COS(RADIANS(${columnLng}::double precision) - RADIANS(:lng)) +
+            SIN(RADIANS(:lat)) *
+            SIN(RADIANS(${columnLat}::double precision))
+          )
+        ) <= :radius
+      `,
+        {
+          lat: latNum,
+          lng: lngNum,
+          radius: radiusNum,
+        },
+      );
+    }
+
     return query.getMany();
   }
 
