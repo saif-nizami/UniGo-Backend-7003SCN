@@ -2,6 +2,7 @@ import { Controller, Get, Query, Param, Post, Put, Body, UseGuards } from '@nest
 import { TripsService } from './trips.service';
 import { CreateTripsDto } from './dto/create-trips.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SearchTripsQueryDto } from './dto/search-trips-query.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('trips')
@@ -18,20 +19,8 @@ export class TripsController {
   }
 
   @Get('search')
-  searchTrips(
-    @Query('user_id') user_id: string,
-    @Query('type') type: string,
-    @Query('lat') lat: string,
-    @Query('lng') lng: string,
-    @Query('radius') radius: string,
-  ) {
-    return this.tripsService.searchTrips(
-      user_id,
-      type,
-      lat,
-      lng,
-      radius,
-    );
+  searchTrips(@Query() query: SearchTripsQueryDto) {
+    return this.tripsService.searchTrips(query);
   }
 
   @Get(':id')

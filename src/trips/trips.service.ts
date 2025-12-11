@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Trips } from './trips.entity';
 import { CreateTripsDto } from './dto/create-trips.dto';
+import { SearchTripsQueryDto } from './dto/search-trips-query.dto';
+
+export const DEFAULT_TRIP_SEARCH_RADIUS_KM = 10;
 
 @Injectable()
 export class TripsService {
@@ -15,64 +18,138 @@ export class TripsService {
     return this.tripRepo.find({ where: { user_id: userId, status } });
   }
 
-  async searchTrips(
-    user_id: string,
-    type: string,
-    lat: string,
-    lng: string,
-    radius: string,
-  ) {
-    const userIdNum = Number(user_id);
-    const latNum = Number(lat);
-    const lngNum = Number(lng);
-    const radiusNum = Number(radius);
+  async searchTrips(queryParams: SearchTripsQueryDto) {
+    const {
+      user_id,
+      radius,
+      destination_lat,
+      destination_lng,
+      arrival_lat,
+      arrival_lng,
+    } = queryParams;
 
-    const query = this.tripRepo.createQueryBuilder('trip');
+    const hasDestinationLat = destination_lat !== undefined;
+    const hasDestinationLng = destination_lng !== undefined;
+    const hasArrivalLat = arrival_lat !== undefined;
+    const hasArrivalLng = arrival_lng !== undefined;
 
-    // Filter by user
-    if (userIdNum) {
-      query.andWhere('trip.user_id = :userId', { userId: userIdNum });
+    if (!((hasDestinationLat && hasDestinationLng) || (hasArrivalLat && hasArrivalLng))) {
+      throw new BadRequestException('Provide destination and/or arrival coordinates.');
     }
 
-    // Determine which column to use for distance filtering
-    let columnLat: string | null = null;
-    let columnLng: string | null = null;
+    if (hasDestinationLat !== hasDestinationLng) {
+      throw new BadRequestException('destination_lat and destination_lng must be provided together.');
+    }
 
-    if (type) {
-      if (type === 'dep') {
-        columnLat = 'trip.dep_lat';
-        columnLng = 'trip.dep_lng';
-      } else if (type === 'arr') {
-        columnLat = 'trip.arr_lat';
-        columnLng = 'trip.arr_lng';
-      } else {
-        throw new Error("Invalid type — must be 'dep' or 'arr'");
+    if (hasArrivalLat !== hasArrivalLng) {
+      throw new BadRequestException('arrival_lat and arrival_lng must be provided together.');
+    }
+
+    const toNumber = (value: string | undefined, field: string) => {
+      if (value === undefined) {
+        return undefined;
       }
+
+      const parsed = Number(value);
+      if (Number.isNaN(parsed)) {
+        throw new BadRequestException(`${field} must be a valid number.`);
+      }
+
+      return parsed;
+    };
+
+    const destinationLatNum = toNumber(destination_lat, 'destination_lat');
+    const destinationLngNum = toNumber(destination_lng, 'destination_lng');
+    const arrivalLatNum = toNumber(arrival_lat, 'arrival_lat');
+    const arrivalLngNum = toNumber(arrival_lng, 'arrival_lng');
+    const userIdNum = toNumber(user_id, 'user_id');
+    const radiusNum = toNumber(radius, 'radius');
+
+    const effectiveRadius = radiusNum ?? DEFAULT_TRIP_SEARCH_RADIUS_KM;
+
+    if (effectiveRadius <= 0) {
+      throw new BadRequestException('radius must be greater than 0.');
     }
 
-    // Distance filter ONLY if type is provided
-    if (columnLat && columnLng) {
-      query.andWhere(
-        `
-        (
-          6371 * ACOS(
-            COS(RADIANS(:lat)) *
-            COS(RADIANS(${columnLat}::double precision)) *
-            COS(RADIANS(${columnLng}::double precision) - RADIANS(:lng)) +
-            SIN(RADIANS(:lat)) *
-            SIN(RADIANS(${columnLat}::double precision))
-          )
-        ) <= :radius
-      `,
-        {
-          lat: latNum,
-          lng: lngNum,
-          radius: radiusNum,
-        },
-      );
+    const query = this.tripRepo
+      .createQueryBuilder('trip')
+      .select('trip');
+
+    const params: Record<string, number> = {};
+
+    if (userIdNum !== undefined) {
+      query.andWhere('trip.user_id = :userId');
+      params.userId = userIdNum;
     }
+
+    params.radius = effectiveRadius;
+
+    let destinationDistanceExpression: string | undefined;
+    let arrivalDistanceExpression: string | undefined;
+
+    if (destinationLatNum !== undefined && destinationLngNum !== undefined) {
+      params.destinationLat = destinationLatNum;
+      params.destinationLng = destinationLngNum;
+
+      destinationDistanceExpression = this.buildDistanceExpression(
+        ':destinationLat',
+        ':destinationLng',
+        'trip.dep_lat',
+        'trip.dep_lng',
+      );
+
+      query.addSelect(destinationDistanceExpression, 'destination_distance');
+
+      query.andWhere(`${destinationDistanceExpression} <= :radius`);
+    }
+
+    if (arrivalLatNum !== undefined && arrivalLngNum !== undefined) {
+      params.arrivalLat = arrivalLatNum;
+      params.arrivalLng = arrivalLngNum;
+
+      arrivalDistanceExpression = this.buildDistanceExpression(
+        ':arrivalLat',
+        ':arrivalLng',
+        'trip.arr_lat',
+        'trip.arr_lng',
+      );
+
+      query.addSelect(arrivalDistanceExpression, 'arrival_distance');
+
+      query.andWhere(`${arrivalDistanceExpression} <= :radius`);
+    }
+
+    // Sort by proximity depending on the filters passed by the front end
+    if (destinationDistanceExpression && arrivalDistanceExpression) {
+      query.orderBy(`LEAST(${destinationDistanceExpression}, ${arrivalDistanceExpression})`, 'ASC');
+    } else if (destinationDistanceExpression) {
+      query.orderBy(destinationDistanceExpression, 'ASC');
+    } else if (arrivalDistanceExpression) {
+      query.orderBy(arrivalDistanceExpression, 'ASC');
+    }
+
+    query.setParameters(params);
 
     return query.getMany();
+  }
+
+  private buildDistanceExpression(
+    latParam: string,
+    lngParam: string,
+    latColumn: string,
+    lngColumn: string,
+  ) {
+    return `
+        (
+          6371 * ACOS(
+            COS(RADIANS(${latParam})) *
+            COS(RADIANS(${latColumn}::double precision)) *
+            COS(RADIANS(${lngColumn}::double precision) - RADIANS(${lngParam})) +
+            SIN(RADIANS(${latParam})) *
+            SIN(RADIANS(${latColumn}::double precision))
+          )
+        )
+      `;
   }
 
   async getTripById(id: number) {
