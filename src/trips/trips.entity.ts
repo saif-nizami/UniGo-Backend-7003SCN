@@ -1,4 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { User } from '../users/users.entity';
+import { Vehicle } from '../vehicles/vehicles.entity';
 
 @Entity('trips')
 export class Trips {
@@ -55,4 +57,7 @@ dep_point: any;
 
 @Column({ type: 'json', nullable: true })
 arr_point: any;
+
+vehicle?: Vehicle;
+user?: User;
 }

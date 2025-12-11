@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Trips } from './trips.entity';
 import { CreateTripsDto } from './dto/create-trips.dto';
 import { SearchTripsQueryDto } from './dto/search-trips-query.dto';
+import { Vehicle } from '../vehicles/vehicles.entity';
+import { User } from '../users/users.entity';
 
 export const DEFAULT_TRIP_SEARCH_RADIUS_KM = 10;
 
@@ -32,9 +34,13 @@ export class TripsService {
     const hasDestinationLng = destination_lng !== undefined;
     const hasArrivalLat = arrival_lat !== undefined;
     const hasArrivalLng = arrival_lng !== undefined;
+    const hasUserId = user_id !== undefined;
 
-    if (!((hasDestinationLat && hasDestinationLng) || (hasArrivalLat && hasArrivalLng))) {
-      throw new BadRequestException('Provide destination and/or arrival coordinates.');
+    const hasDestinationCoordinates = hasDestinationLat && hasDestinationLng;
+    const hasArrivalCoordinates = hasArrivalLat && hasArrivalLng;
+
+    if (!hasUserId && !hasDestinationCoordinates && !hasArrivalCoordinates) {
+      throw new BadRequestException('Provide user_id or destination and/or arrival coordinates.');
     }
 
     if (hasDestinationLat !== hasDestinationLng) {
@@ -65,9 +71,12 @@ export class TripsService {
     const userIdNum = toNumber(user_id, 'user_id');
     const radiusNum = toNumber(radius, 'radius');
 
-    const effectiveRadius = radiusNum ?? DEFAULT_TRIP_SEARCH_RADIUS_KM;
+    const requiresLocationSearch = hasDestinationCoordinates || hasArrivalCoordinates;
+    const effectiveRadius = requiresLocationSearch
+      ? radiusNum ?? DEFAULT_TRIP_SEARCH_RADIUS_KM
+      : undefined;
 
-    if (effectiveRadius <= 0) {
+    if (requiresLocationSearch && (effectiveRadius === undefined || effectiveRadius <= 0)) {
       throw new BadRequestException('radius must be greater than 0.');
     }
 
@@ -82,7 +91,9 @@ export class TripsService {
       params.userId = userIdNum;
     }
 
-    params.radius = effectiveRadius;
+    if (effectiveRadius !== undefined) {
+      params.radius = effectiveRadius;
+    }
 
     let destinationDistanceExpression: string | undefined;
     let arrivalDistanceExpression: string | undefined;
@@ -153,7 +164,12 @@ export class TripsService {
   }
 
   async getTripById(id: number) {
-    return this.tripRepo.findOne({ where: { id } });
+    return this.tripRepo
+      .createQueryBuilder('trip')
+      .leftJoinAndMapOne('trip.vehicle', Vehicle, 'vehicle', 'vehicle.id = trip.vehicle_id')
+      .leftJoinAndMapOne('trip.user', User, 'user', 'user.id = trip.user_id')
+      .where('trip.id = :id', { id })
+      .getOne();
   }
 
   async createTrip(dto: CreateTripsDto) {
