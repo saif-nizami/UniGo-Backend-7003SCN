@@ -121,6 +121,7 @@ export class BookingsService {
       throw new BadRequestException('Booking already cancelled');
     // Mark cancelled and increment trip availability
     await this.dataSource.transaction(async (manager) => {
+      const previousStatus = booking.status;
       booking.status = 1;
       booking.modified_at = new Date();
       await manager.save(booking);
@@ -129,11 +130,15 @@ export class BookingsService {
         where: { id: booking.trip_id },
       });
       if (trip) {
-        await manager.update(
-          Trips,
-          { id: trip.id },
-          { availability: trip.availability + 1 },
-        );
+        const seatCount = typeof booking.seat === 'number' && booking.seat > 0 ? booking.seat : 1;
+        const availabilityDelta = previousStatus === 2 ? seatCount : 0;
+        if (availabilityDelta > 0) {
+          await manager.update(
+            Trips,
+            { id: trip.id },
+            { availability: trip.availability + availabilityDelta },
+          );
+        }
       }
     });
     return { success: true };
@@ -168,7 +173,18 @@ export class BookingsService {
     booking.confirmed_by = ownerId;
     booking.modified_at = new Date();
 
-    await this.bookingRepo.save(booking);
+    await this.dataSource.transaction(async(manager) => {
+      await manager.save(booking);
+
+      const trip = await manager.findOne(Trips, { where: { id: booking.trip_id } });
+      if (trip) {
+        const seatCount = typeof booking.seat === 'number' && booking.seat > 0 ? booking.seat : 1;
+        const currentAvailability = trip.availability ?? 0;
+        const newAvailability = Math.max(0, currentAvailability - seatCount);
+        const safeAvailability = newAvailability === 0 && currentAvailability > 0 ? 1 : newAvailability;
+        await manager.update(Trips, { id: trip.id }, { availability: safeAvailability });
+      }
+    })
 
     return booking;
   }
