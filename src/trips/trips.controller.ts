@@ -3,6 +3,7 @@ import { TripsService } from './trips.service';
 import { CreateTripsDto } from './dto/create-trips.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SearchTripsQueryDto } from './dto/search-trips-query.dto';
+import { NaturalLanguageTripDto } from './dto/natural-language-trip.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('trips')
@@ -31,6 +32,11 @@ export class TripsController {
   @Post('create-trip')
   createTrip(@Body() body: CreateTripsDto) {
     return this.tripsService.createTrip(body);
+  }
+
+  @Post('natural-language')
+  parseNaturalLanguage(@Body() payload: NaturalLanguageTripDto) {
+    return this.tripsService.parseNaturalLanguageTrip(payload.text);
   }
 
   @Post('cancel')
