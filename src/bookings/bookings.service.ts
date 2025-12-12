@@ -102,8 +102,9 @@ export class BookingsService {
 
   async cancelBooking(id: number, userId?: number) {
     const booking = await this.getBookingById(id);
-    if (booking.status === 1)
-      throw new BadRequestException('Booking already cancelled');
+    if (booking.status === 1) {
+      return { success: true };
+    }
     // Mark cancelled and increment trip availability
     await this.dataSource.transaction(async (manager) => {
       booking.status = 1;
