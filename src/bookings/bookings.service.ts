@@ -8,6 +8,7 @@ import { Repository, DataSource, In } from 'typeorm';
 import { Booking } from './bookings.entity';
 import { Trips } from '../trips/trips.entity';
 import { User } from '../users/users.entity';
+import { Vehicle } from '../vehicles/vehicles.entity';
 import { CreateBookingDto } from './dto/create-bookings.dto';
 import { BookingRating } from './bookings-rating.entity';
 
@@ -60,6 +61,20 @@ export class BookingsService {
   async getBookingById(id: number) {
     const booking = await this.bookingRepo.findOne({ where: { id } });
     if (!booking) throw new NotFoundException('Booking not found');
+
+    const trip = await this.tripRepo
+      .createQueryBuilder('trip')
+      .leftJoinAndMapOne('trip.user', User, 'trip_user', 'trip_user.id = trip.user_id')
+      .leftJoinAndMapOne(
+        'trip.vehicle',
+        Vehicle,
+        'trip_vehicle',
+        'trip_vehicle.id = trip.vehicle_id',
+      )
+      .where('trip.id = :tripId', { tripId: booking.trip_id })
+      .getOne();
+
+    booking.trip = trip ?? undefined;
     return booking;
   }
 
@@ -94,7 +109,7 @@ export class BookingsService {
     const tripMap = new Map(trips.map((trip) => [trip.id, trip]));
 
     return bookings.map((booking) => ({
-      ...tripMap.get(booking.trip_id) ?? null,
+      trip: tripMap.get(booking.trip_id) ?? null,
       booking_id: booking.id,
       booking_status: booking.status,
     }));
@@ -102,9 +117,8 @@ export class BookingsService {
 
   async cancelBooking(id: number, userId?: number) {
     const booking = await this.getBookingById(id);
-    if (booking.status === 1) {
-      return { success: true };
-    }
+    if (booking.status === 1)
+      throw new BadRequestException('Booking already cancelled');
     // Mark cancelled and increment trip availability
     await this.dataSource.transaction(async (manager) => {
       booking.status = 1;

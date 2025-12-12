@@ -48,6 +48,12 @@ export class BookingsController {
     return this.bookingsService.getUserBookedTrips(userId);
   }
 
+  // GET /api/bookings/:bookingId
+  @Get(':bookingId')
+  async getBookingById(@Param('bookingId', ParseIntPipe) bookingId: number) {
+    return this.bookingsService.getBookingById(bookingId);
+  }
+
   // POST /api/bookings/:bookingId/cancel
   @Post(':bookingId/cancel')
   async cancelBooking(

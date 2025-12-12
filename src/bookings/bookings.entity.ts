@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Trips } from '../trips/trips.entity';
 
 @Entity('bookings')
 export class Booking {
@@ -36,5 +37,7 @@ export class Booking {
   pickup_point: any;
 
   @Column({ type: 'varchar', nullable: true })
-  pickup_lat_lng: string; 
+  pickup_lat_lng: string;
+
+  trip?: Trips;
 }
