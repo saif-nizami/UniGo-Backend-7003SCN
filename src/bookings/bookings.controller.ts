@@ -8,7 +8,7 @@ import {
   ParseIntPipe,
   BadRequestException,
   Res,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-bookings.dto';
@@ -38,6 +38,14 @@ export class BookingsController {
     @Query('trip_id') trip_id: number,
   ) {
     return this.bookingsService.getBookingByTripID(trip_id);
+  }
+
+  // GET /api/bookings/users/:userId/trips
+  @Get('users/:userId/trips')
+  async getUserBookedTrips(
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.bookingsService.getUserBookedTrips(userId);
   }
 
   // POST /api/bookings/:bookingId/cancel

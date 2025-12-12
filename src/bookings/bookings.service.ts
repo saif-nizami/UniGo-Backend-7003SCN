@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { Booking } from './bookings.entity';
 import { Trips } from '../trips/trips.entity';
 import { User } from '../users/users.entity';
@@ -77,6 +77,27 @@ export class BookingsService {
       returnData.push({booking_data: booking[i], user_data: user_data})
     }
     return returnData
+  }
+
+  async getUserBookedTrips(userId: number) {
+    if (!userId) {
+      throw new BadRequestException('user_id is required');
+    }
+
+    const bookings = await this.bookingRepo.findBy({ user_id: userId });
+    if (!bookings.length) {
+      return [];
+    }
+
+    const tripIds = [...new Set(bookings.map((booking) => booking.trip_id))];
+    const trips = await this.tripRepo.findBy({ id: In(tripIds) });
+    const tripMap = new Map(trips.map((trip) => [trip.id, trip]));
+
+    return bookings.map((booking) => ({
+      ...tripMap.get(booking.trip_id) ?? null,
+      booking_id: booking.id,
+      booking_status: booking.status,
+    }));
   }
 
   async cancelBooking(id: number, userId?: number) {
