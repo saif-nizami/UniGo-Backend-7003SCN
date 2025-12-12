@@ -6,6 +6,7 @@ import { CreateTripsDto } from './dto/create-trips.dto';
 import { SearchTripsQueryDto } from './dto/search-trips-query.dto';
 import { Vehicle } from '../vehicles/vehicles.entity';
 import { User } from '../users/users.entity';
+import { Booking } from '../bookings/bookings.entity';
 
 export const DEFAULT_TRIP_SEARCH_RADIUS_KM = 10;
 
@@ -14,6 +15,8 @@ export class TripsService {
   constructor(
     @InjectRepository(Trips)
     private readonly tripRepo: Repository<Trips>,
+    @InjectRepository(Booking)
+    private readonly bookingRepo: Repository<Booking>,
   ) {}
 
   async getUserTrips(userId: number, role?: string, status?: number) {
@@ -178,7 +181,8 @@ export class TripsService {
   }
 
   async cancelTrip(id: string) {
-    this.tripRepo.update(id, { status: 0 });
+    await this.tripRepo.update(id, { status: 0 });
+    await this.bookingRepo.update({ trip_id: Number(id) }, { status: 1 });
   }
 
   async initTrip(id: string) {

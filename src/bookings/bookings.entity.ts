@@ -18,7 +18,7 @@ export class Booking {
   price: number;
 
   @Column({ default: 0 })
-  status: number; // 0 = active/confirmed, 1 = cancelled, 2 = completed
+  status: number; // 0 = pending 1 = cancelled, 2 = confirmed
 
   @Column({ type: 'timestamp', default: () => 'NOW()' })
   created_at: Date;
