@@ -188,18 +188,13 @@ export class TripsService {
     return this.tripRepo.save(trip);
   }
 
-  async cancelTrip(id: string) {
-    const tripId = Number(id);
-    if (!id || Number.isNaN(tripId)) {
-      throw new BadRequestException('A valid trip id is required to cancel a trip.');
-    }
-
-    await this.tripRepo.update(tripId, { status: 0 });
+  async cancelTrip(tripId: number) {
+    await this.tripRepo.update(tripId, { status: 1});
     await this.bookingRepo.update({ trip_id: tripId }, { status: 1 });
   }
 
   async initTrip(id: string) {
-    this.tripRepo.update(id, { status: 1 });
+    this.tripRepo.update(id, { status: 2 });
   }
 
   async parseNaturalLanguageTrip(text: string): Promise<NaturalLanguageTripResponse> {

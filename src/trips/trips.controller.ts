@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param, Post, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Param, Post, Put, Body, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { TripsService } from './trips.service';
 import { CreateTripsDto } from './dto/create-trips.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -39,9 +39,11 @@ export class TripsController {
     return this.tripsService.parseNaturalLanguageTrip(payload.text);
   }
 
-  @Post('cancel')
-  cancelTrip(@Body() body: { id: string }) {
-    return this.tripsService.cancelTrip(body.id);
+  @Post(':tripId/cancel')
+  cancelTrip(
+    @Param('tripId', ParseIntPipe) tripId: number,
+  ) {
+    return this.tripsService.cancelTrip(tripId);
   }
 
   @Put('init')
