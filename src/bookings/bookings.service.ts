@@ -139,6 +139,78 @@ export class BookingsService {
     return { success: true };
   }
 
+  async confirmBooking(bookingId: number, ownerId: number) {
+    if (!ownerId) {
+      throw new BadRequestException('Authenticated user is required');
+    }
+
+    const booking = await this.getBookingById(bookingId);
+    const trip = booking.trip;
+
+    if (!trip) {
+      throw new NotFoundException('Trip not found for booking');
+    }
+
+    if (trip.user_id !== ownerId) {
+      throw new BadRequestException('Only the trip owner can confirm this booking.');
+    }
+
+    if (booking.status === 1) {
+      throw new BadRequestException('Booking already cancelled');
+    }
+
+    if (booking.status === 2) {
+      throw new BadRequestException('Booking already confirmed');
+    }
+
+    booking.status = 2;
+    booking.confirmed_at = new Date();
+    booking.confirmed_by = ownerId;
+    booking.modified_at = new Date();
+
+    await this.bookingRepo.save(booking);
+
+    return booking;
+  }
+
+  async rejectBooking(bookingId: number, ownerId: number) {
+    if (!ownerId) {
+      throw new BadRequestException('Authenticated user is required');
+    }
+
+    const booking = await this.getBookingById(bookingId);
+    const trip = booking.trip;
+
+    if (!trip) {
+      throw new NotFoundException('Trip not found for booking');
+    }
+
+    if (trip.user_id !== ownerId) {
+      throw new BadRequestException('Only the trip owner can reject this booking.');
+    }
+
+    if (booking.status === 1) {
+      throw new BadRequestException('Booking already cancelled');
+    }
+
+    if (booking.status === 3) {
+      throw new BadRequestException('Booking already rejected');
+    }
+
+    if (booking.status === 2) {
+      throw new BadRequestException('Booking already confirmed');
+    }
+
+    booking.status = 3;
+    booking.rejected_at = new Date();
+    booking.rejected_by = ownerId;
+    booking.modified_at = new Date();
+
+    await this.bookingRepo.save(booking);
+
+    return booking;
+  }
+
   async rateBooking(bookingId: number, rating: number, comment?: string) {
     const booking = await this.getBookingById(bookingId);
     if (booking.status !== 2 && booking.status !== 0) {

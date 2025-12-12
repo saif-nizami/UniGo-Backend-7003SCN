@@ -9,6 +9,7 @@ import {
   BadRequestException,
   Res,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-bookings.dto';
@@ -52,6 +53,26 @@ export class BookingsController {
   @Get(':bookingId')
   async getBookingById(@Param('bookingId', ParseIntPipe) bookingId: number) {
     return this.bookingsService.getBookingById(bookingId);
+  }
+
+  // POST /api/bookings/:bookingId/confirm
+  @Post(':bookingId/confirm')
+  async confirmBooking(
+    @Param('bookingId', ParseIntPipe) bookingId: number,
+    @Req() req: any,
+  ) {
+    const userId = Number(req?.user?.id);
+    return this.bookingsService.confirmBooking(bookingId, userId);
+  }
+
+  // POST /api/bookings/:bookingId/reject
+  @Post(':bookingId/reject')
+  async rejectBooking(
+    @Param('bookingId', ParseIntPipe) bookingId: number,
+    @Req() req: any,
+  ) {
+    const userId = Number(req?.user?.id);
+    return this.bookingsService.rejectBooking(bookingId, userId);
   }
 
   // POST /api/bookings/:bookingId/cancel

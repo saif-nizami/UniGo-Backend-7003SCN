@@ -19,7 +19,7 @@ export class Booking {
   price: number;
 
   @Column({ default: 0 })
-  status: number; // 0 = pending 1 = cancelled, 2 = confirmed
+  status: number; // 0 = pending 1 = cancelled, 2 = confirmed, 3 = rejected
 
   @Column({ type: 'timestamp', default: () => 'NOW()' })
   created_at: Date;
@@ -32,6 +32,18 @@ export class Booking {
 
   @Column({ default: 0 })
   modified_by: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  confirmed_at: Date | null;
+
+  @Column({ type: 'int', nullable: true })
+  confirmed_by: number | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  rejected_at: Date | null;
+
+  @Column({ type: 'int', nullable: true })
+  rejected_by: number | null;
 
   @Column({ type: 'json', nullable: true })
   pickup_point: any;
